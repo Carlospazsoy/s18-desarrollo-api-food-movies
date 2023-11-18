@@ -3,11 +3,11 @@ const express = require('express')
 //Importar rutas
 const dishes = require('./routes/dishes')
 const { port, dbPassword } = require('./config')
-const connect = require('./config/db')
 const movies = require('./routes/movies')
+const connect = require('./config/db')
 
 const app = express()
-/* connect() */
+connect()
 
 //const PORT = 5000
 

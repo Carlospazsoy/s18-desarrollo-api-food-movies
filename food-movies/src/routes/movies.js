@@ -1,90 +1,82 @@
 const { Router } = require("express");
+
+// Importaciion atmatica al escribir await Movie
 const Movie = require('../models/movie')
 
 function movies(app) {
-  let arreglo_peliculas = [];
+  /* let arreglo_peliculas = []; nos sirvio antes de configurar la DB real */
   //Creacion del router y asignacion de ruta
   const router = Router();
   app.use("/api/movies", router);
 
   //Definicion de metodos
-  router.get("/", (req, res) => {
-    return res.json(arreglo_peliculas);
+  router.get("/", async (req, res) => {
+    const movies = await Movie.find();
+    console.log(movies);
+    return res.json(movies);
   });
-
-  router.post("/", (req, res) => {
+  
+  router.post("/", async (req, res) => {
     const newMovie = req.body;
-    arreglo_peliculas.push(newMovie);
-    console.log(arreglo_peliculas);
+    const postedMovie = await Movie.create(newMovie);
+    console.log(postedMovie);
+
     return res.json({
       success: true,
       mensaje: "Pelicula agregada con éxito",
     });
   });
 
-  router.put("/:name", (req, res) => {
+  router.put("/:name", async (req, res) => {
     const name = req.params.name;
-    const newGenre = req.body.genero;
-
-    const pelicula_identificada = arreglo_peliculas.find(
-      (movie) => movie.nombre === name
-    );
-
-    if (!pelicula_identificada) {
-      return res.status(404).json({ error: "Película no encontrada" });
-    }
-
-    console.log(
-      "ContentType de pelicula_identificada:",
-      typeof pelicula_identificada
-    );
-
-    pelicula_identificada.genero = newGenre;
-
+    const newMovie = req.body;
+    const updatedMovie = await Movie.updateOne({nombre: name}, newMovie)
+    console.log(updatedMovie);
     return res.json({
-      mensaje: "Género de la película modificado exitosamente",
-      pelicula: pelicula_identificada,
+      mensaje: "Cuerpo de la pelicula modificado exitosamente",
+      pelicula: updatedMovie,
     });
   });
 
-  router.patch("/:name", (req, res) => {
+  router.patch("/:name", async (req, res) => {
     const name = req.params.name;
-    const updatedFields = req.body; // Contiene los campos que se desean actualizar
+    const { genero, año } = req.body;
 
-    // Identificar la película por nombre
-    const pelicula_identificada = arreglo_peliculas.find((movie) => movie.nombre === name);
+    try {
+        const updatedMovie = await Movie.findOneAndUpdate(
+            { nombre: name },
+            { $set: { genero, año } },
+            { new: true }
+        );
 
-    if (!pelicula_identificada) {
-      return res.status(404).json({ error: "Película no encontrada" });
+        if (!updatedMovie) {
+            return res.status(404).json({ mensaje: "Película no encontrada" });
+        }
+
+        console.log(updatedMovie);
+        return res.json({
+            mensaje: "Género y año de la película modificados exitosamente",
+            pelicula: updatedMovie,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ mensaje: "Error al modificar la película" });
     }
+});
 
-    // Actualizar los campos especificados en updatedFields
-    for (const key in updatedFields) {
-			// si el cuerpo del request posee un key, este se iguala con el key del cuerpo de la pelicula identificada
-      if (updatedFields.hasOwnProperty(key)) {
-        pelicula_identificada[key] = updatedFields[key];
-      }
-    }
-			// Devolver la película modificada
-    return res.json({
-      mensaje: "Información de la película modificada exitosamente",
-      pelicula: pelicula_identificada,
-    });
-  });
 
-  router.delete("/:name", (req, res) => {
-    const name = req.params.name;
-    // Utiliza !== para verificar que el nombre no sea igual
-    arreglo_peliculas = arreglo_peliculas.filter(
-      (movie) => movie.nombre !== name
-    );
-    console.log(arreglo_peliculas);
+  router.delete("/:indice", async (req, res) => {
+    const indice = req.params.indice;
+    const deletedMovie = await Movie.deleteOne({
+      _id: indice
+    })
+    console.log(deletedMovie);
     return res.json({
       mensaje: "Pelicula eliminada con exito",
       success: true,
     });
   });
-}
+} 
 
 module.exports = movies;
 

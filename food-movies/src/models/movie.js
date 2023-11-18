@@ -1,11 +1,14 @@
 const mongoose = require('mongoose');
 
+//Definicion del esquema peliculas
 const movieSchema = new mongoose.Schema({
-    name: String,
-    director: String,
-    //year: Date
+    nombre: String,
+    genero: String,
+    año: Number,
+    director: String
 });
 
+//Compilar nuestro schema dentro del modelo
 const Movie = mongoose.model('movies', movieSchema)
 
-module.exports = Movie
+module.exports = Movie 
